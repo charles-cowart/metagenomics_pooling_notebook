@@ -3,9 +3,7 @@ import unittest
 import numpy as np
 
 from diff_dataframes import dataframes_are_equal
-from metapool.rescale_counts import convert_read_count_to_cell_count, \
-    to_absolute_abundance_read_count, to_absolute_abundance_cell_count, \
-    _to_row_percentage, _to_column_percentage
+from metapool.rescale_counts import convert_read_count_to_cell_count, convert_read_count_to_cell_count_per_g_input, to_absolute_abundance_cell_count, _to_row_percentage, _to_column_percentage, to_absolute_abundance_read_count
 
 
 _folder = "metapool/tests/data/spike_in/"
@@ -96,6 +94,9 @@ class TestRescaleCounts(unittest.TestCase):
             _folder + "metadata_features.tsv",
             sep="\t", index_col="OTUID")
 
+        # TODO: Populate this
+        prep_info_samples = None
+
         # Clean sample names (Trims everything after last underscore)
         linear_models["sample_name"] = \
             linear_models["sample_name_pool"].replace(
@@ -104,7 +105,7 @@ class TestRescaleCounts(unittest.TestCase):
                 regex=True)
 
         df, failed_samples = to_absolute_abundance_cell_count(
-            table_community, linear_models, metadata_features)
+            table_community, linear_models, metadata_features, prep_info_samples)
         # R version applies absolute abundance transform,
         # cell count transform, and a transpose,
         # Python version you must externally transpose.

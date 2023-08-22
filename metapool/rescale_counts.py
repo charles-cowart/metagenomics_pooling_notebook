@@ -2,6 +2,14 @@ import pandas as pd
 import numpy as np
 
 
+def to_absolute_abundance_read_count(a, b):
+    # TODO: THis needs to be implemented
+    pass
+
+def convert_read_count_to_cell_count(a, b):
+    # TODO: THis needs to be implemented
+    pass
+
 def _to_column_percentage(df):
     return df / df.sum() * 100
 
@@ -44,7 +52,7 @@ def convert_read_count_to_cell_count_per_g_input(df, metadata_features, prep_inf
     df = df.mul(mult_row, axis=0)
     return df
 
-def to_absolute_abundance_cell_count(df, linear_models, metadata_features):
+def to_absolute_abundance_cell_count(df, linear_models, metadata_features, prep_info_samples):
     df = _to_log10_cpm(df)
     df, failed_cols = _apply_model(df, linear_models)
     df = convert_read_count_to_cell_count_per_g_input(df, metadata_features, prep_info_samples)
