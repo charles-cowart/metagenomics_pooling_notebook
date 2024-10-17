@@ -18,8 +18,9 @@ _STANDARD_METAG_SHEET_TYPE = 'standard_metag'
 _STANDARD_METAT_SHEET_TYPE = 'standard_metat'
 _DUMMY_SHEET_TYPE = 'dummy_amp'
 _ABSQUANT_SHEET_TYPE = 'abs_quant_metag'
+_TELLSEQ_SHEET_TYPE = 'tellseq_metag'
 SHEET_TYPES = (_STANDARD_METAG_SHEET_TYPE, _ABSQUANT_SHEET_TYPE,
-               _STANDARD_METAT_SHEET_TYPE)
+               _STANDARD_METAT_SHEET_TYPE, _TELLSEQ_SHEET_TYPE)
 
 
 class KLSampleSheet(sample_sheet.SampleSheet):
@@ -1021,6 +1022,62 @@ class MetagenomicSampleSheetv100(KLSampleSheet):
         }
 
 
+class TellSeqSampleSheetv10(KLSampleSheet):
+    # A temporary stand-in for the final TellSeq SampleSheet() class.
+    # duplicates MetagenomicsSampleSheetv100.
+    _HEADER = {
+        'IEMFileVersion': '4',
+        'SheetType': _TELLSEQ_SHEET_TYPE,
+        'SheetVersion': '10',
+        'Investigator Name': 'Knight',
+        'Experiment Name': 'RKL_experiment',
+        'Date': None,
+        'Workflow': 'GenerateFASTQ',
+        'Application': 'FASTQ Only',
+        'Assay': _METAGENOMIC,
+        'Description': '',
+        'Chemistry': 'Default',
+    }
+
+    # Note that there doesn't appear to be a difference between 95, 99, and 100
+    # beyond the value observed in 'Well_description' column. The real
+    # difference is between standard_metag and abs_quant_metag.
+    data_columns = ['Sample_ID', 'Sample_Name', 'Sample_Plate', 'Sample_Well',
+                    'barcode_id', 'Sample_Project', 'Well_description']
+
+    # For now, assume only AbsQuantSampleSheetv10 doesn't contain
+    # 'contains_replicates' column, while the others do.
+
+    _BIOINFORMATICS_COLUMNS = {'Sample_Project', 'QiitaID', 'BarcodesAreRC',
+                               'ForwardAdapter', 'ReverseAdapter',
+                               'HumanFiltering', 'contains_replicates',
+                               'library_construction_protocol',
+                               'experiment_design_description'}
+
+    _BIOINFORMATICS_BOOLEANS = frozenset({'BarcodesAreRC', 'HumanFiltering',
+                                          'contains_replicates'})
+
+    CARRIED_PREP_COLUMNS = ['experiment_design_description', 'i5_index_id',
+                            'i7_index_id', 'index', 'index2',
+                            'library_construction_protocol', 'sample_name',
+                            'sample_plate', 'sample_project',
+                            'well_description', 'well_id_384']
+
+    def __init__(self, path=None):
+        super().__init__(path=path)
+        self.remapper = {
+            'sample sheet Sample_ID': 'Sample_ID',
+            'Sample': 'Sample_Name',
+            'Project Plate': 'Sample_Plate',
+            'Well': 'well_id_384',
+            'i7 name': 'I7_Index_ID',
+            'i7 sequence': 'index',
+            'i5 name': 'I5_Index_ID',
+            'i5 sequence': 'index2',
+            'Project Name': 'Sample_Project',
+        }
+
+
 class MetagenomicSampleSheetv90(KLSampleSheet):
     '''
     MetagenomicSampleSheetv90 is meant to be a class to handle legacy
@@ -1297,7 +1354,7 @@ def load_sample_sheet(sample_sheet_path):
     types = [AmpliconSampleSheet, MetagenomicSampleSheetv101,
              MetagenomicSampleSheetv100, MetagenomicSampleSheetv90,
              AbsQuantSampleSheetv10, MetatranscriptomicSampleSheetv0,
-             MetatranscriptomicSampleSheetv10]
+             MetatranscriptomicSampleSheetv10, TellSeqSampleSheetv10]
 
     header = _parse_header(sample_sheet_path)
 
@@ -1368,6 +1425,8 @@ def _create_sample_sheet(sheet_type, sheet_version, assay_type):
         sheet = AbsQuantSampleSheetv10()
     elif sheet_type == _DUMMY_SHEET_TYPE:
         sheet = AmpliconSampleSheet()
+    elif sheet_type == _TELLSEQ_SHEET_TYPE:
+        sheet = TellSeqSampleSheetv10()
     else:
         raise ValueError("'%s' is an unrecognized SheetType" % sheet_type)
 
